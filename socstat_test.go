@@ -33,11 +33,23 @@ func TestCntConnTwoEntry(t *testing.T) {
 	}
 }
 
+func TestCntConnTwoEntryTwoNodes(t *testing.T) {
+	s := NewSocStat()
+	s.Duration(10 * time.Second)
+	s.IncConn()
+	time.Sleep(time.Second)
+	s.IncConn()
+	cnt := s.CntConn()
+	if cnt != 2 {
+		t.Errorf("cnt not one after one increment")
+	}
+}
+
 func TestCntConnAfterDurationOneValid(t *testing.T) {
 	s := NewSocStat()
 	s.Duration(2 * time.Second)
 	s.IncConn()
-	time.Sleep(3 * time.Second)
+	time.Sleep(2 * time.Second)
 	s.IncConn()
 	cnt := s.CntConn()
 	if cnt == 2 {
@@ -54,7 +66,7 @@ func TestCntConnAfterDurationNoneValid(t *testing.T) {
 	s.Duration(2 * time.Second)
 	s.IncConn()
 	s.IncConn()
-	time.Sleep(3 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	cnt := s.CntConn()
 	if cnt == 2 {
@@ -69,7 +81,7 @@ func TestCntConnAfterDurationNoneValidThenOneInc(t *testing.T) {
 	s.Duration(2 * time.Second)
 	s.IncConn()
 	s.IncConn()
-	time.Sleep(3 * time.Second)
+	time.Sleep(2 * time.Second)
 	s.IncConn()
 	cnt := s.CntConn()
 
@@ -80,5 +92,20 @@ func TestCntConnAfterDurationNoneValidThenOneInc(t *testing.T) {
 		t.Errorf("one inc not removed")
 	case 0:
 		t.Errorf("last inc not counted")
+	}
+}
+
+func Test12IncAt1SecPause(t *testing.T) {
+	s := NewSocStat()
+	s.Duration(10 * time.Second)
+	for i := 0; i < 12; i++ {
+		time.Sleep(time.Second)
+		s.IncConn()
+	}
+
+	cnt := s.CntConn()
+
+	if cnt != 10 {
+		t.Errorf("cnt not 10, cnt: %v", cnt)
 	}
 }
