@@ -29,6 +29,7 @@ func (s *socStat) IncConn() {
 		st:  time.Now(),
 		nxt: nil,
 	}
+	s.cnt++
 
 	if s.head == nil {
 		s.head = &n
@@ -38,7 +39,6 @@ func (s *socStat) IncConn() {
 
 	s.tail.nxt = &n
 	s.tail = &n
-	s.cnt++
 }
 
 func (s *socStat) rmExpired() {
