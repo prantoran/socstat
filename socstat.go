@@ -1,6 +1,9 @@
 package socstat
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type SocStat interface {
 	Duration(d time.Duration)
@@ -14,6 +17,7 @@ type node struct {
 }
 
 type socStat struct {
+	mu   sync.Mutex
 	d    time.Duration
 	head *node
 	tail *node
@@ -25,23 +29,27 @@ func (s *socStat) Duration(dd time.Duration) {
 }
 
 func (s *socStat) IncConn() {
+	s.mu.Lock()
 	n := node{
 		st:  time.Now(),
 		nxt: nil,
 	}
 	s.cnt++
 
-	if s.head == nil {
-		s.head = &n
-		s.tail = &n
-		return
+	if s.tail != nil {
+		s.tail.nxt = &n
 	}
 
-	s.tail.nxt = &n
+	if s.head == nil {
+		s.head = &n
+	}
+
 	s.tail = &n
+	s.mu.Unlock()
 }
 
 func (s *socStat) rmExpired() {
+	s.mu.Lock()
 	now := time.Now()
 	for {
 		if s.head == nil || now.Sub(s.head.st) <= s.d {
@@ -54,6 +62,7 @@ func (s *socStat) rmExpired() {
 	if s.head == nil {
 		s.tail = nil
 	}
+	s.mu.Unlock()
 }
 
 func (s *socStat) CntConn() int {
